@@ -1,1 +1,1 @@
-# Final project for OpenPifPaf backbone comparison
+# OpenPifPaf: Performance vs Efficiency
