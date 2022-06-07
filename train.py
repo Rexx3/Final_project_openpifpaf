@@ -5,7 +5,7 @@ from heads import *
 import torch
 import copy
 from dataloader import *
-from trainer import *
+from utils import *
 
 class LearningRateLambda():
     def __init__(self, decay_schedule, *,
@@ -142,7 +142,7 @@ if __name__=='__main__':
 		last_epoch= start_epoch  * training_batches_per_epoch - 1,
 		)
 	checkpoint_shell = copy.deepcopy(model)
-	trainer = Trainer(
+	trainer = MyTrainer(
 		model, loss, optimizer, args.output,
 		checkpoint_shell=checkpoint_shell,
 		lr_scheduler=lr_scheduler,
@@ -157,4 +157,4 @@ if __name__=='__main__':
 
 	
 	
-	trainer.loop(train_loader, val_loader, start_epoch=start_epoch)
+	trainer.train_loop(train_loader, val_loader, start_epoch=start_epoch)
