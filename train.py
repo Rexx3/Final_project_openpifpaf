@@ -53,8 +53,6 @@ class LearningRateLambda():
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser()
-	# parser.add_argument('--version', action='version',
-	#                     version='OpenPifPaf {version}'.format(version=__version__))
 	parser.add_argument('-o', '--output', default=None,
 	                    help='output file')
 	parser.add_argument('--disable-cuda', action='store_true',
