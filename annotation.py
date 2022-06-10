@@ -105,9 +105,6 @@ class Annotation(Base):
         if self.suppress_score_index is not None:
             v = np.copy(v)
             v[self.suppress_score_index] = 0.0
-        # return 0.1 * np.max(v) + 0.9 * np.mean(np.square(v))
-        # return np.mean(np.square(v))
-        # return np.sum(self.score_weights * np.sort(np.square(v))[::-1])
         return np.sum(self.score_weights * np.sort(v)[::-1])
 
     def scale(self, v_th=0.5):
@@ -128,8 +125,6 @@ class Annotation(Base):
         keypoints[v_mask, 2] = np.maximum(0.01, keypoints[v_mask, 2])
         keypoints = np.around(keypoints.astype(np.float64), coordinate_digits)
 
-        # convert to float64 before rounding because otherwise extra digits
-        # will be added when converting to Python type
         data = {
             'keypoints': keypoints.reshape(-1).tolist(),
             'bbox': [round(float(c), coordinate_digits) for c in self.bbox()],
