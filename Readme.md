@@ -3,7 +3,7 @@
 ## Training: 
 To train the Openpifpaf model, you mgiht use the follwoing command:<br />
 
-~python train.py<br />~
+`python train.py<br />`
 
 Options:<br />
 Learning rate: --lr<br /> 
