@@ -8,6 +8,8 @@ Options:<br />
 Learning rate: --lr<br /> 
 Learning rate decay: --lr-decay<br />
 Momemtum: --mometum<br />
+Batch Size: --batch-size<br />
+Load workers: --loader_workers<br />
 
 
 
