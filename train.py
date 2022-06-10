@@ -147,12 +147,6 @@ if __name__=='__main__':
 		checkpoint_shell=checkpoint_shell,
 		lr_scheduler=lr_scheduler,
 		device=torch.device('cuda'),
-		# model_meta_data={
-		#     'args': vars(args),
-		#     'version': __version__,
-		#     'plugin_versions': plugin.versions(),
-		#     'hostname': socket.gethostname(),
-		# },
 	)
 
 	
