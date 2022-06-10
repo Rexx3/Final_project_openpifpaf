@@ -13,10 +13,10 @@ Load workers: --loader_workers<br />
 
 
 
-Evaluation: python eval.py<br />
+## Evaluation: python eval.py<br />
 
 
-Plots of loss per epoch:<br />
+## Plots of loss per epoch:<br />
 
 ![ShuffleNet](all-images/shuffle/0008.jpeg) <br />
 ![MobileNet](all-images/mobile/0008.jpeg) <br />
