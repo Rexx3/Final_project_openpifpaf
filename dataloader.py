@@ -403,19 +403,6 @@ if __name__=='__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--batch_size', default=1, type=int)
 	parser.add_argument('--loader_workers', default=4, type=int)
-    # parser.add_argument('-o', '--output', default=None,
-    #                     help='output file')
-    # parser.add_argument('--disable-cuda', action='store_true',
-    #                     help='disable CUDA')
-    # parser.add_argument('--ddp', default=False, action='store_true',
-    #                     help='[experimental] DistributedDataParallel')
-    # parser.add_argument('--local_rank', default=None, type=int,
-    #                     help='[experimental] for torch.distributed.launch')
-    # parser.add_argument('--no-sync-batchnorm', dest='sync_batchnorm',
-    #                     default=True, action='store_false',
-    #                     help='[experimental] in ddp, to not use syncbatchnorm')
 	args = parser.parse_args()
-	# train_loader = Cocodata(args).train_loader()
-	# val_loader = Cocodata(args).train_loader()
 	test_loader = Cocodata(args).eval_loader()
 	print(len(test_loader))
