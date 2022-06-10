@@ -1,4 +1,4 @@
-# OpenPifPaf: Performance vs Efficiency<br\>
+# OpenPifPaf: Performance vs Efficiency<br />
 ##Training: python train.py<br\>
 ##Evaluation: python eval.py<br\>
 ##Plots:<br\>
