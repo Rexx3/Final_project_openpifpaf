@@ -1,8 +1,4 @@
 import argparse
-
-
-# from .composite import CompositeLoss, CompositeLossByComponent
-# from .multi_head import MultiHeadLoss, MultiHeadLossAutoTuneKendall, MultiHeadLossAutoTuneVariance
 from model import get_coco_multihead
 from heads import *
 from lossutils import *
@@ -19,9 +15,6 @@ class CompositeLoss(torch.nn.Module):
         self.n_confidences = head_meta.n_confidences
         self.n_vectors = head_meta.n_vectors
         self.n_scales = head_meta.n_scales
-
-        # LOG.debug('%s: n_vectors = %d, n_scales = %d',
-        #           head_meta.name, self.n_vectors, self.n_scales)
 
         self.field_names = (
             '{}.{}.c'.format(head_meta.dataset, head_meta.name),
@@ -64,8 +57,6 @@ class CompositeLoss(torch.nn.Module):
             return [None, None, None]
         assert x.shape[2] == 1 + self.n_confidences + self.n_vectors * 2 + self.n_scales
         assert t.shape[2] == self.n_confidences + self.n_vectors * 3 + self.n_scales
-
-        # determine foreground and background masks based on ground truth
         t = torch.transpose(t, 2, 4)
         finite = torch.isfinite(t)
         t_confidence_raw = t[:, :, :, :, 0:self.n_confidences]
@@ -73,8 +64,6 @@ class CompositeLoss(torch.nn.Module):
         c_mask = torch.all(t_confidence_raw > 0.0, dim=4)
         reg_mask = torch.all(finite[:, :, :, :, self.n_confidences:1 + self.n_vectors * 2], dim=4)
         scale_mask = torch.all(finite[:, :, :, :, self.n_confidences + self.n_vectors * 3:], dim=4)
-
-        # extract masked ground truth
         t_confidence_bg = t[bg_mask][:, 0:self.n_confidences]
         t_confidence = t[c_mask][:, 0:self.n_confidences]
         t_regs = t[reg_mask][:, self.n_confidences:1 + self.n_vectors * 2]
@@ -85,18 +74,14 @@ class CompositeLoss(torch.nn.Module):
         t_scales_reg = t[reg_mask][:, self.n_confidences + self.n_vectors * 3:]
         t_scales = t[scale_mask][:, self.n_confidences + self.n_vectors * 3:]
 
-        # extract masked predictions
         x = torch.transpose(x, 2, 4)
         x_confidence_bg = x[bg_mask][:, 1:1 + self.n_confidences]
         x_logs2_c = x[c_mask][:, 0:1]
         x_confidence = x[c_mask][:, 1:1 + self.n_confidences]
         x_logs2_reg = x[reg_mask][:, 0:1]
         x_regs = x[reg_mask][:, 1 + self.n_confidences:1 + self.n_confidences + self.n_vectors * 2]
-        # x_logs2_scale = x[scale_mask][:, 0:1]
         x_scales_reg = x[reg_mask][:, 1 + self.n_confidences + self.n_vectors * 2:]
         x_scales = x[scale_mask][:, 1 + self.n_confidences + self.n_vectors * 2:]
-
-        # impute t_scales_reg with predicted values
         t_scales_reg = t_scales_reg.clone()
         invalid_t_scales_reg = torch.isnan(t_scales_reg)
         t_scales_reg[invalid_t_scales_reg] = \
@@ -107,20 +92,15 @@ class CompositeLoss(torch.nn.Module):
         l_reg = self.reg_loss(x_regs, t_regs, t_sigma_min, t_scales_reg)
         l_scale = self.scale_loss(x_scales, t_scales)
 
-        # softclamp
         if self.soft_clamp is not None:
             l_confidence_bg = self.soft_clamp(l_confidence_bg)
             l_confidence = self.soft_clamp(l_confidence)
             l_reg = self.soft_clamp(l_reg)
             l_scale = self.soft_clamp(l_scale)
-
-        # --- composite uncertainty
-        # c
         x_logs2_c = 3.0 * torch.tanh(x_logs2_c / 3.0)
         l_confidence = 0.5 * l_confidence * torch.exp(-x_logs2_c) + 0.5 * x_logs2_c
-        # reg
+
         x_logs2_reg = 3.0 * torch.tanh(x_logs2_reg / 3.0)
-        # We want sigma = b*0.5. Therefore, log_b = 0.5 * log_s2 + log2
         x_logb = 0.5 * x_logs2_reg + 0.69314
         reg_factor = torch.exp(-x_logb)
         x_logb = x_logb.unsqueeze(1)
@@ -129,11 +109,7 @@ class CompositeLoss(torch.nn.Module):
             x_logb = torch.repeat_interleave(x_logb, self.n_vectors, 1)
             reg_factor = torch.repeat_interleave(reg_factor, self.n_vectors, 1)
         l_reg = l_reg * reg_factor + x_logb
-        # scale
-        # scale_factor = torch.exp(-x_logs2)
-        # for i in range(self.n_scales):
-        #     l_scale_component = l_scale[:, i]
-        #     l_scale_component = l_scale_component * scale_factor + 0.5 * x_logs2
+
 
         if self.weights is not None:
             full_weights = torch.empty_like(t_confidence_raw)
@@ -211,17 +187,7 @@ class build_loss:
 
     def loss(self, head_metas):
         sparse_task_parameters = None
-        # TODO
-        # if MultiHeadLoss.task_sparsity_weight:
-        #     sparse_task_parameters = []
-        #     for head_net in head_nets:
-        #         if getattr(head_net, 'sparse_task_parameters', None) is not None:
-        #             sparse_task_parameters += head_net.sparse_task_parameters
-        #         elif hasattr(head_net, 'conv'):
-        #             sparse_task_parameters.append(head_net.conv.weight)
-        #         else:
-        #             raise Exception('unknown l1 parameters for given head: {} ({})'
-        #                             ''.format(head_net.meta.name, type(head_net)))
+        
 
         losses = [LOSSES[meta.__class__](meta) for meta in head_metas]
         component_lambdas = self.component_lambdas
@@ -250,9 +216,6 @@ LOSSES = {
 }
 LOSS_COMPONENTS = {
     Bce,
-    # SmoothL1,
-    # Scale,
-    # Laplace,
 }
 
 if __name__=='__main__':
