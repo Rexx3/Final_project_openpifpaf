@@ -4,17 +4,17 @@
 To train the Openpifpaf model, you mgiht use the follwoing command:<br />
 python train.py<br />
 
-Options:
-Learning rate: --lr 
-Learning rate decay: --lr-decay
-Momemtum: --mometum
+Options:<br />
+Learning rate: --lr<br /> 
+Learning rate decay: --lr-decay<br />
+Momemtum: --mometum<br />
 
 
 
 Evaluation: python eval.py<br />
 
 
-Plots:<br />
+Plots of loss per epoch:<br />
 
 ![ShuffleNet](all-images/shuffle/0008.jpeg) <br />
 ![MobileNet](all-images/mobile/0008.jpeg) <br />
