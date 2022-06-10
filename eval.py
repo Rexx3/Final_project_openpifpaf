@@ -15,36 +15,21 @@ def processor(model, processed_image_batch, device):
 
 
 def enumerated_dataloader(enumerated_dataloader, model, device):
-    """Predict from an enumerated dataloader."""
     for batch_i, item in enumerated_dataloader:
         if len(item) == 3:
             processed_image_batch, gt_anns_batch, meta_batch = item
             image_batch = [None for _ in processed_image_batch]
         elif len(item) == 4:
             image_batch, processed_image_batch, gt_anns_batch, meta_batch = item
-        # if self.visualize_processed_image:
-        #     Base.processed_image(processed_image_batch[0])
 
         pred_batch = processor(model, processed_image_batch, device=device)
-        # self.last_decoder_time = self.processor.last_decoder_time
-        # self.last_nn_time = self.processor.last_nn_time
-        # self.total_decoder_time += self.processor.last_decoder_time
-        # self.total_nn_time += self.processor.last_nn_time
-        # self.total_images += len(processed_image_batch)
+
 
         # un-batch
-        for image, pred, gt_anns, meta in \
-                zip(image_batch, pred_batch, gt_anns_batch, meta_batch):
-            LOG.info('batch %d: %s', batch_i, meta.get('file_name', 'no-file-name'))
-
-            # load the original image if necessary
-            # if self.visualize_image:
-            #     visualizer.Base.image(image, meta=meta)
+        for image, pred, gt_anns, meta in zip(image_batch, pred_batch, gt_anns_batch, meta_batch):
             pred = [pred]
             gt_anns = [gt_anns]
 
-            # if self.json_data:
-            #     pred = [ann.json_data() for ann in pred]
 
             yield pred, gt_anns, meta
 
@@ -67,8 +52,6 @@ def accumulate(predictions, image_meta, *, ground_truth=None):
             if k in ('category_id', 'score', 'keypoints', 'bbox', 'image_id')
         }
         image_annotations.append(pred_data)
-
-    # force at least one annotation per image (for pycocotools)
     if not image_annotations:
         n_keypoints = 17
         image_annotations.append({
@@ -79,17 +62,12 @@ def accumulate(predictions, image_meta, *, ground_truth=None):
             'score': 0.001,
         })
 
-    # if LOG.getEffectiveLevel() == logging.DEBUG:
-    #     self._stats(image_annotations, [image_id])
-    #     LOG.debug(image_meta)
-
     predictions += image_annotations
     return predictions
 
 def fields_batch(model, image_batch, device=None):
 
     def apply(f, items):
-        """Apply f in a nested fashion to all items that are not list or tuple."""
         if items is None:
             return None
         if isinstance(items, (list, tuple)):
@@ -205,14 +183,10 @@ def main():
 	device = torch.device('cuda')
 	pred_loader = enumerated_dataloader(enumerate(test_loader), model, device)
 	predictions = []
-	i = 0
 	image_ids = []
 	for image_i, (pred, gt_anns, image_meta) in enumerate(pred_loader):
-		i+=1
 		image_ids.append(image_i)
 		predictions += accumulate(pred, image_meta, ground_truth = gt_anns)
-		if i> 30:
-			break
 
 
 	predictions = [
@@ -221,15 +195,13 @@ def main():
             for annotation in predictions
             if type(annotation) == dict
         ]
-	coco = pycocotools.coco.COCO(annotation_file='C:/Users/wx036/Desktop/UCSD/ECE228/finalproject/data-mscoco/annotations/person_keypoints_val2017.json')
+	coco = pycocotools.coco.COCO(annotation_file='./data-mscoco/annotations/person_keypoints_val2017.json')
 	coco_eval = coco.loadRes(predictions)
 
 	myeval = COCOeval(coco, coco_eval, iouType='keypoints')
 	category_ids = [1]
 	if category_ids:
 	    myeval.params.catIds = category_ids
-	# if self.keypoint_oks_sigmas is not None:
-	#     self.eval.params.kpt_oks_sigmas = np.asarray(self.keypoint_oks_sigmas)
 
 	if image_ids is not None:
 	    print('image ids', image_ids)
